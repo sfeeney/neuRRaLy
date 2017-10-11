@@ -2,6 +2,8 @@ import numpy as np
 import numpy.random as npr
 import astropy.stats as aps
 import astropy.io.fits as apf
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as mp
 import subprocess as sp
 import scipy.stats as ss

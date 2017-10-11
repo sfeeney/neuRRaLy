@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.random as npr
 import astropy.stats as aps
-import pyfits as pf
+import astropy.io.fits as apf
 import matplotlib.pyplot as mp
 import subprocess as sp
 import scipy.stats as ss
@@ -87,7 +87,7 @@ if dataset == 'gloess':
     n_bins = 50
 
     # get training stars
-    cat_hdulist = pf.open(data_dir + 'gloess_cat.fit')
+    cat_hdulist = apf.open(data_dir + 'gloess_cat.fit')
     cols = cat_hdulist[1].columns
     data = cat_hdulist[1].data
     ids = data['Name']
@@ -112,7 +112,7 @@ if dataset == 'gloess':
     feh_cols = (fehs - feh_min) / (feh_max - feh_min)
 
     # read in lightcurves
-    cat_hdulist = pf.open(data_dir + 'gloess_lcs.fit')
+    cat_hdulist = apf.open(data_dir + 'gloess_lcs.fit')
     cols = cat_hdulist[1].columns
     data = cat_hdulist[1].data
     binned_med_lcs = []
@@ -172,21 +172,25 @@ elif dataset == 'crts':
                 css_id_num.append(vals[10])
 
     # get training stars
-    hdulist = pf.open(data_dir + 'crts_bright_feh_info.fit')
+    hdulist = apf.open(data_dir + 'crts_bright_feh_info.fit')
     cols = hdulist[1].columns
     data = hdulist[1].data
     ids = data['ID'][0]
     fehs = data['FEH'][0]
-    pers = data['PER'][0]
+    taus = data['PER'][0]
     mus = data['DM'][0]
 
     # check for bad metallicities
     bad_feh = (fehs < -3.0)
     ids = ids[~bad_feh]
     fehs = fehs[~bad_feh]
-    pers = pers[~bad_feh]
+    taus = taus[~bad_feh]
     mus = mus[~bad_feh]
     n_lc = len(ids)
+
+    # period distribution
+    tau_mean = np.mean(taus)
+    tau_std = np.std(taus)
 
     # plot colours set by metallicities
     feh_min = np.min(fehs)
@@ -246,7 +250,7 @@ elif dataset == 'crts':
 
         # what do the phase-wrapped lightcurves look like?
         # 1007116003636; 0.5485033
-        period = pers[i]
+        period = taus[i]
         phase = np.mod(time - css_peak[ind], period) / period
         if False:
             fig, axes = mp.subplots(1, 2, figsize=(16,5))

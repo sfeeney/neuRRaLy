@@ -729,14 +729,15 @@ if test_training_length:
     exit()
 
 # dependence on alpha and n_hidden
-n_grid_hid = 5
-n_grid_alpha = 5
+n_grid_hid = 10
+n_grid_alpha = 25
 dcol_hid = 1.0 / float(n_grid_hid - 1)
 dcol_alpha = 1.0 / float(n_grid_alpha - 1)
 n_hidden = np.linspace(1, 10, n_grid_hid, dtype=int) * 100
-n_hidden = np.linspace(1, 10, n_grid_hid, dtype=int) * 2
+n_hidden = np.linspace(1, 10, n_grid_hid, dtype=int) * 4
 #alpha = np.logspace(-7, 0, n_grid_alpha)
 alpha = np.logspace(-4, 0, n_grid_alpha)
+alpha = np.logspace(-6, 0, n_grid_alpha)
 seeds = np.random.randint(102314, 221216, n_rpt)
 if use_mpi:
     mpi.COMM_WORLD.Bcast(seeds, root=0)
@@ -747,9 +748,9 @@ feh_pred_loc = np.zeros((n_lc, n_grid_hid, n_grid_alpha, n_rpt))
 job_list = allocate_jobs(n_grid_alpha, n_procs, rank)
 print 'process id {:d}: jobs'.format(rank), job_list
 for i in range(n_grid_hid):
-    print 'n_hidden gridpoint {:d}'.format(i + 1)
     for j in job_list:
-        print 'alpha gridpoint {:d}'.format(j + 1)
+        print 'n_hidden gridpoint {:d},'.format(i + 1), \
+              'alpha gridpoint {:d}'.format(j + 1)
         for k in range(n_rpt):
             #activation='tanh', solver='lbfgs', \
             nn = sk.MLPRegressor(hidden_layer_sizes=(n_hidden[i],), \
@@ -829,8 +830,12 @@ if rank == 0:
     ax = fig.add_subplot(111)
     cax = ax.matshow(chisq, cmap = mpcm.plasma, interpolation = 'nearest')
     mp.colorbar(cax)
-    ax.set_xticklabels([''] + ['{:6.1e}'.format(x) for x in alpha])
-    ax.set_yticklabels([''] + ['{:d}'.format(x) for x in n_hidden])
+    xticks = ax.get_xticks()
+    yticks = ax.get_yticks()
+    ax.set_xticklabels([''] + ['{:6.1e}'.format(alpha[int(x)]) \
+                               for x in xticks[1:-1]])
+    ax.set_yticklabels([''] + ['{:d}'.format(n_hidden[int(y)]) \
+                               for y in yticks[1:-1]])
     ax.set_xlabel(r'$\alpha$')
     ax.xaxis.set_label_position('top')
     ax.set_ylabel(r'$n_{\rm hidden}$')
